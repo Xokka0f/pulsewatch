@@ -1,0 +1,21 @@
+from src.config import settings
+
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
+
+engine = create_async_engine(url=settings.database_url)
+
+
+session_maker = async_sessionmaker(engine, expire_on_commit=False)
+
+
+async def get_session():
+    async with session_maker() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
